@@ -1,0 +1,41 @@
+services:
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v3.8.0
+    container_name: mlflow-server
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./mlruns:/mlflow/mlruns
+      - ./mlflow_data:/mlflow/data
+    command: >
+      mlflow server
+      --backend-store-uri sqlite:////mlflow/data/mlflow.db
+      --default-artifact-root /mlflow/mlruns
+      --host 0.0.0.0
+      --port 5000
+    restart: unless-stopped
+    environment:
+      - MLFLOW_TRACKING_URI=http://localhost:5000
+    networks:
+      - mlflow-network
+
+  api:
+    build:
+      context: .
+      dockerfile: src/api_layer/Dockerfile
+    container_name: inference-api
+    ports:
+      - "8000:8000"
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      - MODEL_NAME=loan-default-model
+      - MODEL_ALIAS=production
+    depends_on:
+      - mlflow
+    restart: unless-stopped
+    networks:
+      - mlflow-network
+
+networks:
+  mlflow-network:
+    driver: bridge
