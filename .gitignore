@@ -1,0 +1,6 @@
+.env
+.venv/
+__pycache__/
+mlflow_data/
+mlflow.db
+notebooks/
