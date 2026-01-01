@@ -1,7 +1,9 @@
 import mlflow
 import argparse
 from typing import Optional
+from src.logging_config import setup_logging
 
+logger = setup_logging(__name__)
 
 def find_best_run(experiment_name: str) -> Optional[dict]:
     runs = mlflow.search_runs(
@@ -11,7 +13,7 @@ def find_best_run(experiment_name: str) -> Optional[dict]:
     )
     
     if len(runs) == 0:
-        print(f"No runs found in experiment '{experiment_name}'")
+        logger.warning(f"No runs found in experiment '{experiment_name}'")
         return None
     
     best_run = runs.iloc[0]
@@ -29,11 +31,11 @@ def register_model(
     f1_score: float,
     min_f1_threshold: float
 ) -> Optional[str]:
-    """Register model if it meets the F1 score threshold."""
+    """Register model if it meets the F1 score threshold and assign @staging alias."""
     
     if f1_score < min_f1_threshold:
-        print(f"Model F1 score {f1_score:.4f} below threshold {min_f1_threshold:.4f}")
-        print("Model not registered.")
+        logger.warning(f"Model F1 score {f1_score:.4f} below threshold {min_f1_threshold:.4f}")
+        logger.warning("Model not registered")
         return None
     
     model_uri = f"runs:/{run_id}/model"
@@ -43,7 +45,17 @@ def register_model(
         name=model_name
     )
     
-    print(f"Registered as version {result.version}")
+    # Set @staging alias for the newly registered model
+    client = mlflow.tracking.MlflowClient()
+    client.set_registered_model_alias(
+        name=model_name,
+        alias="staging",
+        version=result.version
+    )
+    
+    logger.info(f"Model registered as '{model_name}' version {result.version}")
+    logger.info(f"Assigned alias '@staging' to version {result.version}")
+    logger.info("To promote to production, manually set @production alias in MLflow UI")
     return result.version
 
 
@@ -80,30 +92,26 @@ def main():
     
     mlflow.set_tracking_uri(args.mlflow_tracking_uri)
 
-    # Fancy output    
-    print("=" * 60)
-    print("MLflow Model Registration")
-    print("=" * 60)
-    print(f"Experiment: {args.mlflow_experiment_name}")
-    print(f"Model name: {args.model_name}")
-    print(f"Min F1 threshold: {args.min_f1_score:.4f}")
-    print()
+    logger.info("=" * 60)
+    logger.info("MLflow Model Registration")
+    logger.info("=" * 60)
+    logger.info(f"Experiment: {args.mlflow_experiment_name}")
+    logger.info(f"Model name: {args.model_name}")
+    logger.info(f"Min F1 threshold: {args.min_f1_score:.4f}")
     
-    print("Searching for best run by F1 score...")
+    logger.info("Searching for best run by F1 score...")
     best_run = find_best_run(args.mlflow_experiment_name)
     
     if best_run is None:
         return
     
     # Display best run metrics
-    print()
-    print("Best run found:")
-    print(f"  Run ID: {best_run['run_id']}")
-    print(f"  F1 Score: {best_run['f1_score']:.4f}")
-    print(f"  Accuracy: {best_run['accuracy']:.4f}")
-    print(f"  Precision: {best_run['precision']:.4f}")
-    print(f"  Recall: {best_run['recall']:.4f}")
-    print()
+    logger.info("Best run found:")
+    logger.info(f"  Run ID: {best_run['run_id']}")
+    logger.info(f"  F1 Score: {best_run['f1_score']:.4f}")
+    logger.info(f"  Accuracy: {best_run['accuracy']:.4f}")
+    logger.info(f"  Precision: {best_run['precision']:.4f}")
+    logger.info(f"  Recall: {best_run['recall']:.4f}")
     
     version = register_model(
         run_id=best_run["run_id"],
@@ -113,10 +121,10 @@ def main():
     )
     
     if version:
-        print()
-        print("=" * 60)
-        print(f"Model registered as '{args.model_name}' v{version}")
-        print("=" * 60)
+        logger.info("=" * 60)
+        logger.info(f"Model registered as '{args.model_name}' v{version} with @staging alias")
+        logger.info("Manually promote to @production in MLflow UI when ready")
+        logger.info("=" * 60)
 
 
 if __name__ == "__main__":

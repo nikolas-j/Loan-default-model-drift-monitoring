@@ -4,3 +4,11 @@ __pycache__/
 mlflow_data/
 mlflow.db
 notebooks/
+.pytest_cache/
+.vscode/
+
+# Logs
+logs/
+*.log
+
+GITHUB_SETUP.md

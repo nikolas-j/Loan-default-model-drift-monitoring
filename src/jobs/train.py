@@ -1,6 +1,7 @@
 import pandas as pd
 import scipy
 import mlflow
+import os
 
 import argparse
 from typing import Dict
@@ -15,8 +16,12 @@ from typing import Dict
 
 from features import data_to_features
 from validate import validate_raw_data
+from src.logging_config import setup_logging
 
-print("Imports successful.")
+# Disable MLflow environment variable scanning message
+os.environ["MLFLOW_RECORD_ENV_VARS_IN_MODEL_LOGGING"] = "false"
+
+logger = setup_logging(__name__)
 
 def load_data(path: str) -> pd.DataFrame:
     return pd.read_csv(path)
@@ -71,18 +76,19 @@ def main():
     mlflow.set_tracking_uri(args.mlflow_tracking_uri)
     mlflow.set_experiment(experiment_name)
 
-    print("Starting training pipeline...")
+    logger.info("Starting training pipeline...")
 
     # === Data === #
-    print("Loading data...")
+    logger.info(f"Loading data from {args.data_path}")
     data = load_data(args.data_path)
     if validate_raw_data(data) == False:
         raise ValueError("Data validation failed.")
     X, y = data_to_features(data)
 
     # === Time Series Split === #
-    print("Splitting data...")
+    logger.info("Splitting data (time series)...")
     X_train, X_test, y_train, y_test = time_series_split(X, y, test_size=0.2)
+    logger.info(f"Train: {X_train.shape[0]} samples, Test: {X_test.shape[0]} samples")
 
     # === Train === #
     params_to_log = {
@@ -91,20 +97,21 @@ def main():
         "feature_count": X_train.shape[1],
     }
 
-    print("Setting up MLFlow...")
+    logger.info("Starting MLflow run...")
     with mlflow.start_run() as run:
         run_id = run.info.run_id
         mlflow.log_params(params_to_log)
 
-        print("Training model...")
+        logger.info("Training model (RandomizedSearchCV)...")
         model = train_model(X_train, y_train)
         metrics = evaluate(model, X_test, y_test)
         mlflow.log_metrics(metrics)
+        logger.info(f"Model performance - F1: {metrics['f1_score']:.4f}, Accuracy: {metrics['accuracy']:.4f}")
         
         # Log dataset path as a tag for easy filtering
         mlflow.set_tag("dataset_path", args.data_path)
         
-        print("Logging model...")
+        logger.info("Logging model to MLflow...")
         input_example = X_train.head(5)
         signature = mlflow.models.infer_signature(input_example, model.predict(input_example))
 
@@ -125,7 +132,7 @@ def main():
         }
 
     print(output)
-    print("Training pipeline ended.")
+    logger.info("Training pipeline completed successfully")
 
 if __name__ == "__main__":
     main()

@@ -5,7 +5,7 @@ import pandas as pd
 import os
 from src.api_layer.schemas import PredictionRequest, PredictionResponse
 
-# Configuration from environment variables (Docker-friendly)
+# API-specific configuration from environment variables (Docker-friendly)
 MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000")
 MODEL_NAME = os.getenv("MODEL_NAME", "loan-default-model")
 MODEL_ALIAS = os.getenv("MODEL_ALIAS", "production")
