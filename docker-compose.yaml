@@ -10,10 +10,9 @@ services:
     command: >
       mlflow server
       --backend-store-uri sqlite:////mlflow/data/mlflow.db
-      --default-artifact-root file:///mlflow/mlruns
+      --artifacts-destination file:///mlflow/mlruns
       --host 0.0.0.0
       --port 5000
-      --serve-artifacts
     restart: unless-stopped
     environment:
       - MLFLOW_TRACKING_URI=http://localhost:5000

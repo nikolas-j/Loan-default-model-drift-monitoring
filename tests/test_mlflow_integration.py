@@ -215,7 +215,7 @@ class TestModelLogging:
             signature = mlflow.models.infer_signature(X, model.predict(X))
             mlflow.sklearn.log_model(
                 sk_model=model,
-                artifact_path="model",
+                registered_model_name="model",
                 signature=signature
             )
             

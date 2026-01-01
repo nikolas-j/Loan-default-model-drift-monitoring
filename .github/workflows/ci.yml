@@ -72,7 +72,6 @@ jobs:
     - name: Run integration tests
       env:
         MLFLOW_TRACKING_URI: http://localhost:5000
-        MLFLOW_ARTIFACT_URI: ./mlruns
       run: |
         uv run pytest tests/test_mlflow_integration.py -v --tb=short
         
