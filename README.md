@@ -19,6 +19,9 @@ This project demonstrates the following ML engineering practices:
 
 ## Architecture
 
+![Architecture flow chart](misc/loan-default-system-design.png)
+
+
 ```
 ├── src/
 │   ├── jobs/              # ML pipeline components
