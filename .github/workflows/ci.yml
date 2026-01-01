@@ -51,14 +51,18 @@ jobs:
     - name: Wait for MLflow to be ready
       run: |
         echo "Waiting for MLflow to start..."
-        timeout 60 bash -c 'until curl -f http://localhost:5000/health 2>/dev/null; do sleep 2; done' || true
-        sleep 5
-        echo "MLflow should be ready"
-        
-    - name: Verify MLflow is running
-      run: |
-        curl -f http://localhost:5000/health || echo "Health check endpoint not available, checking experiments endpoint..."
-        curl -f http://localhost:5000/api/2.0/mlflow/experiments/list || exit 1
+        for i in {1..30}; do
+          if curl -s http://localhost:5000/ > /dev/null 2>&1; then
+            echo "MLflow is responding."
+            sleep 3
+            exit 0
+          fi
+          echo "Attempt $i/30: MLflow not ready yet..."
+          sleep 2
+        done
+        echo "MLflow failed to start"
+        docker compose logs mlflow
+        exit 1
         
     - name: Run integration tests
       env:
