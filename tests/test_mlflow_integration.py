@@ -1,4 +1,4 @@
-"""
+""")
 Integration tests for MLflow tracking and model registry.
 These tests require a running MLflow server (via docker-compose).
 """
@@ -11,6 +11,8 @@ import os
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.datasets import make_classification
 
+# Disable conda environment logging for faster test execution
+os.environ["MLFLOW_DISABLE_ENV_MANAGER_CONDA_WARNING"] = "TRUE"
 
 pytestmark = pytest.mark.integration
 
@@ -192,7 +194,8 @@ class TestModelLogging:
                 sk_model=model,
                 name="model",
                 signature=signature,
-                input_example=input_example
+                input_example=input_example,
+                pip_requirements=["scikit-learn", "pandas", "numpy"]
             )
             
         # Verify model was logged
@@ -219,7 +222,8 @@ class TestModelLogging:
                 sk_model=model,
                 name="model",
                 signature=signature,
-                input_example=input_example
+                input_example=input_example,
+                pip_requirements=["scikit-learn", "pandas", "numpy"]
             )
             
         # Load and verify signature
@@ -244,7 +248,8 @@ class TestModelRegistry:
         with mlflow.start_run() as run:
             mlflow.sklearn.log_model(
                 sk_model=model,
-                name="model"
+                name="model",
+                pip_requirements=["scikit-learn", "pandas", "numpy"]
             )
             
         # Register the model
@@ -273,7 +278,8 @@ class TestModelRegistry:
         with mlflow.start_run() as run:
             mlflow.sklearn.log_model(
                 sk_model=model,
-                name="model"
+                name="model",
+                pip_requirements=["scikit-learn", "pandas", "numpy"]
             )
             
         # Register and load the model
