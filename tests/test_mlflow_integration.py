@@ -186,12 +186,13 @@ class TestModelLogging:
         
         with mlflow.start_run() as run:
             # Log model with signature
-            signature = mlflow.models.infer_signature(X, model.predict(X))
+            input_example = X.head(3)
+            signature = mlflow.models.infer_signature(input_example, model.predict(input_example))
             mlflow.sklearn.log_model(
                 sk_model=model,
-                artifact_path="model",
+                name="model",
                 signature=signature,
-                input_example=X.head(3)
+                input_example=input_example
             )
             
         # Verify model was logged
@@ -212,11 +213,13 @@ class TestModelLogging:
         model.fit(X, y)
         
         with mlflow.start_run() as run:
-            signature = mlflow.models.infer_signature(X, model.predict(X))
+            input_example = X.head(3)
+            signature = mlflow.models.infer_signature(input_example, model.predict(input_example))
             mlflow.sklearn.log_model(
                 sk_model=model,
-                registered_model_name="model",
-                signature=signature
+                name="model",
+                signature=signature,
+                input_example=input_example
             )
             
         # Load and verify signature
@@ -241,7 +244,7 @@ class TestModelRegistry:
         with mlflow.start_run() as run:
             mlflow.sklearn.log_model(
                 sk_model=model,
-                artifact_path="model"
+                name="model"
             )
             
         # Register the model
@@ -270,7 +273,7 @@ class TestModelRegistry:
         with mlflow.start_run() as run:
             mlflow.sklearn.log_model(
                 sk_model=model,
-                artifact_path="model"
+                name="model"
             )
             
         # Register and load the model
