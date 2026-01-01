@@ -44,6 +44,11 @@ jobs:
       run: |
         uv run pytest tests/test_data_stats.py tests/test_drift_check.py -v --tb=short
         
+    - name: Prepare MLflow directories
+      run: |
+        mkdir -p mlruns mlflow_data logs
+        chmod -R 777 mlruns mlflow_data logs
+        
     - name: Start MLflow with Docker Compose
       run: |
         docker compose up -d

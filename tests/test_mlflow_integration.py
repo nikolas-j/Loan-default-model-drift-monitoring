@@ -295,9 +295,11 @@ class TestModelRegistry:
 class TestSearchRuns:
     """Test searching and filtering runs."""
     
-    def test_search_runs_by_metrics(self, test_experiment_name):
+    def test_search_runs_by_metrics(self):
         """Test searching runs by metric values."""
-        mlflow.set_experiment(test_experiment_name)
+        # Use unique experiment for this test
+        exp_name = f"test-search-metrics-{int(time.time() * 1000)}"
+        mlflow.set_experiment(exp_name)
         
         # Create multiple runs with different metrics
         f1_scores = [0.85, 0.90, 0.88]
@@ -308,7 +310,7 @@ class TestSearchRuns:
                 
         # Search for runs with f1_score > 0.87
         runs = mlflow.search_runs(
-            experiment_names=[test_experiment_name],
+            experiment_names=[exp_name],
             filter_string="metrics.f1_score > 0.87",
             order_by=["metrics.f1_score DESC"]
         )
@@ -316,9 +318,11 @@ class TestSearchRuns:
         assert len(runs) == 2  # 0.90 and 0.88
         assert runs.iloc[0]["metrics.f1_score"] == 0.90
         
-    def test_search_best_run(self, test_experiment_name):
+    def test_search_best_run(self):
         """Test finding the best run by a metric."""
-        mlflow.set_experiment(test_experiment_name)
+        # Use unique experiment for this test
+        exp_name = f"test-search-best-{int(time.time() * 1000)}"
+        mlflow.set_experiment(exp_name)
         
         # Create runs with different scores
         scores = [0.75, 0.92, 0.88, 0.85]
@@ -328,7 +332,7 @@ class TestSearchRuns:
                 
         # Find best run
         runs = mlflow.search_runs(
-            experiment_names=[test_experiment_name],
+            experiment_names=[exp_name],
             order_by=["metrics.accuracy DESC"],
             max_results=1
         )
